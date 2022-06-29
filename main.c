@@ -87,13 +87,20 @@ int GetAnnexbNALU(NALU_t *nalu) {
     info2 = 0;
     info3 = 0;
 
+    /**
+     *  以00 00 00 01 || 00 00 01 分割之后的下一个字节就是NALU类型，
+     * （1）第1位禁止位，值为1表示语法出错
+     * （2）第2~3位为参考级别
+     * （3）第4~8为是nal单元类型
+     */
+
     while (!StartCodeFound) {
         if (feof(h264bitstream)) {
             nalu->len = (pos - 1) - nalu->startcodeprefix_len;
             memcpy (nalu->buf, &Buf[nalu->startcodeprefix_len], nalu->len);
-            nalu->forbidden_bit = nalu->buf[0] & 0x80; //1 bit
-            nalu->nal_reference_idc = nalu->buf[0] & 0x60; // 2 bit
-            nalu->nal_unit_type = (nalu->buf[0]) & 0x1f;// 5 bit
+            nalu->forbidden_bit = nalu->buf[0] & 0x80; //1 bit 10000000
+            nalu->nal_reference_idc = nalu->buf[0] & 0x60; // 2 bit 01100000
+            nalu->nal_unit_type = (nalu->buf[0]) & 0x1f;// 5 bit 00011111
             free(Buf);
             return pos - 1;
         }
@@ -119,9 +126,9 @@ int GetAnnexbNALU(NALU_t *nalu) {
 
     nalu->len = (pos + rewind) - nalu->startcodeprefix_len;
     memcpy (nalu->buf, &Buf[nalu->startcodeprefix_len], nalu->len);//
-    nalu->forbidden_bit = nalu->buf[0] & 0x80; //1 bit
-    nalu->nal_reference_idc = nalu->buf[0] & 0x60; // 2 bit
-    nalu->nal_unit_type = (nalu->buf[0]) & 0x1f;// 5 bit
+    nalu->forbidden_bit = nalu->buf[0] & 0x80; //1 bit 10000000
+    nalu->nal_reference_idc = nalu->buf[0] & 0x60; // 2 bit 01100000
+    nalu->nal_unit_type = (nalu->buf[0]) & 0x1f;// 5 bit 00011111
     free(Buf);
 
     return (pos + rewind);
